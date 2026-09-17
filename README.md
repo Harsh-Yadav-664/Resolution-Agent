@@ -10,6 +10,12 @@ Open `index.html` directly in any modern browser (double-click it, or `start ind
 
 Pick a customer on the landing screen (Priya / Arvind / Meher) to open their case.
 
+### Quick check for evaluators (60 seconds)
+1. **Priya** → click the "full refund + upgrade" suggested reply → refund is granted, upgrade is declined and escalated, in the same turn.
+2. **Arvind** → click the hotel-request reply → declined (his delay is 4h; hotel only applies past 5h) — voucher + lounge are still applied.
+3. **Meher** → click the reroute reply → escalated (the ₹2,000 fare difference exceeds the ₹1,500 agent limit; her Platinum tier does not raise that limit).
+4. Click **Decision Trace** in the header at any point to see the rule and decision behind each reply, kept separate from the customer-facing chat.
+
 ## What this is
 
 A support agent for a specific customer journey — an airline disruption — that:
