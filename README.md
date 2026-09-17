@@ -78,6 +78,12 @@ All customer, booking, and policy data lives in the `DATA` object at the top of 
 - Refund requested to a different payment method than the original
 - Any mention of legal action or a formal complaint — escalated immediately, overriding the rest of that turn
 
+## Design & Architecture FAQ
+**Why a single HTML file?** Given the 6-hour limit, it prioritizes reliability, inspectability, and zero-dependency execution over infrastructure — it opens instantly for an evaluator with no build, server, or deploy step, and every decision path is readable top to bottom.
+**Why no runtime LLM/API call?** None is running in this prototype. `IntentEngine` is intentionally kept behind a stable `classify(text) → intent tags` interface so a real LLM/function-calling layer could replace it later without moving policy authority into the model — the policy engine would still gate every action exactly as it does today.
+**Why is the policy engine deterministic?** Thresholds and entitlements (delay tiers, the ₹1,500 fare-diff limit, refund rules) are facts from the Data Pack, not judgment calls — encoding them as plain functions means the same input always produces the same, checkable decision, rather than relying on a model to get a number right.
+**How would this become a production system?** It would connect to real customer/booking systems and governed action APIs (rebooking, refunds, vouchers) instead of simulated actions, add persistence and observability for the audit trail, and swap the intent layer for an LLM call behind the same policy gate.
+
 ## Evaluator view
 Click **Decision Trace** in the header, or the **Decision Trace** tab in the right-hand panel, to see the internal reasoning for each turn (request → booking state → rule → decision → action) plus a running audit trail. This is kept separate from the customer-facing chat by design — the customer never sees rule names, thresholds, or internal terminology.
 
