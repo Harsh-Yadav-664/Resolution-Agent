@@ -80,11 +80,19 @@
   .picker-intro p{color:var(--text-600); font-size:15px; line-height:1.6; margin:0;}
   .picker-grid{display:grid; grid-template-columns:repeat(3,minmax(240px,300px)); gap:20px;}
   .picker-card{
+    position:relative; overflow:hidden;
     background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
-    padding:24px; cursor:pointer; transition:.2s; box-shadow:var(--shadow-sm); text-align:left;
-    display:flex; flex-direction:column; gap:14px;
+    padding:26px 24px 24px; cursor:pointer; transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease;
+    box-shadow:var(--shadow-sm); text-align:left;
+    display:flex; flex-direction:column; gap:13px;
   }
-  .picker-card:hover{transform:translateY(-4px); box-shadow:var(--shadow-lg); border-color:#c7d4f7;}
+  .picker-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
+  .picker-card.tier-card-gold::before{background:linear-gradient(90deg,#e8b13a,#c9860f);}
+  .picker-card.tier-card-silver::before{background:linear-gradient(90deg,#aab4c4,#5f6b7d);}
+  .picker-card.tier-card-platinum::before{background:linear-gradient(90deg,#a78bfa,#5b21b6);}
+  .picker-card:hover{transform:translateY(-5px); box-shadow:var(--shadow-lg); border-color:#c7d4f7;}
+  .picker-card .cta{margin-top:2px; font-size:12.5px; font-weight:700; color:var(--blue); display:flex; align-items:center; gap:5px; opacity:0; transform:translateX(-4px); transition:.2s;}
+  .picker-card:hover .cta{opacity:1; transform:translateX(0);}
   .picker-avatar{
     width:44px;height:44px;border-radius:12px; display:flex; align-items:center; justify-content:center;
     font-weight:700; font-size:16px; color:#fff;
@@ -127,8 +135,13 @@
   .msg{max-width:72%; padding:13px 16px; border-radius:16px; font-size:14.5px; line-height:1.55; opacity:0; transform:translateY(8px); animation:msgIn .35s ease forwards;}
   @keyframes msgIn{to{opacity:1; transform:translateY(0);}}
   .msg.agent{align-self:flex-start; background:#fff; border:1px solid var(--border); border-bottom-left-radius:4px; box-shadow:var(--shadow-sm);}
-  .msg.user{align-self:flex-end; background:var(--blue); color:#fff; border-bottom-right-radius:4px;}
+  .msg.user{align-self:flex-end; background:linear-gradient(135deg,var(--blue),#3f6bf5); color:#fff; border-bottom-right-radius:4px; box-shadow:0 3px 10px rgba(47,95,237,.25);}
   .msg.escalation{border-left:3px solid var(--amber); background:var(--amber-100);}
+  .esc-tag{display:block; width:fit-content; background:var(--amber); color:#fff; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; padding:3px 10px; border-radius:999px; margin-bottom:8px;}
+  .res-card:hover{box-shadow:var(--shadow-sm); border-color:#d7deee;}
+  .flight-card{border-left:3px solid var(--border); transition:.2s;}
+  .flight-card.cancelled{border-left-color:var(--red);}
+  .flight-card.delayed{border-left-color:var(--amber);}
   .typing{align-self:flex-start; background:#fff; border:1px solid var(--border); border-radius:16px; border-bottom-left-radius:4px; padding:14px 18px; display:flex; gap:5px;}
   .typing span{width:6px;height:6px;border-radius:50%;background:var(--text-400); animation:blink 1.2s infinite;}
   .typing span:nth-child(2){animation-delay:.2s;} .typing span:nth-child(3){animation-delay:.4s;}
@@ -160,9 +173,12 @@
   .side-view{display:none;} .side-view.active{display:block;}
 
   .res-card{
-    background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm);
+    background:var(--bg); border:1px solid var(--border); border-left:3px solid var(--border); border-radius:var(--radius-sm);
     padding:14px 16px; margin-bottom:12px; opacity:0; transform:translateY(6px); animation:msgIn .3s ease forwards;
   }
+  .res-card:has(.res-badge.issued){border-left-color:var(--green);}
+  .res-card:has(.res-badge.eligible){border-left-color:var(--blue);}
+  .res-card:has(.res-badge.escalated){border-left-color:var(--amber);}
   .res-card-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;}
   .res-card-title{font-size:12.5px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--text-600);}
   .res-badge{font-size:11px; font-weight:700; padding:3px 9px; border-radius:999px;}
@@ -384,7 +400,7 @@ function renderPicker(){
     const statusClass = f.status==='cancelled' ? 'cancelled' : 'delayed';
     const initials = c.name.split(' ').map(w=>w[0]).join('');
     const card = document.createElement('div');
-    card.className='picker-card';
+    card.className='picker-card tier-card-'+c.tierClass;
     card.onclick=()=>openScenario(c.id);
     card.innerHTML = `
       <div class="picker-avatar avatar-${c.tierClass}">${initials}</div>
@@ -394,6 +410,7 @@ function renderPicker(){
       </div>
       <div class="desc">${f.code} · ${f.route}<br>${f.date}, ${f.time}</div>
       <span class="status-badge ${statusClass}">${statusLabel}</span>
+      <div class="cta">Open case →</div>
     `;
     grid.appendChild(card);
   });
@@ -441,7 +458,7 @@ function renderContext(){
     </div>
     <div class="ctx-section">
       <div class="ctx-label">Flight</div>
-      <div class="flight-card">
+      <div class="flight-card ${f.status==='cancelled'?'cancelled':'delayed'}">
         <div class="route">${f.code} · ${f.route}</div>
         <div class="meta">${f.date} · Scheduled ${f.time}</div>
         <span class="status-badge ${f.status==='cancelled'?'cancelled':'delayed'}">${statusLabel}</span>
@@ -478,7 +495,15 @@ function appendMessage(role, text, opts={}){
   const scroll = document.getElementById('chatScroll');
   const div = document.createElement('div');
   div.className = 'msg ' + role + (opts.escalation?' escalation':'');
-  div.textContent = text;
+  if(opts.escalation){
+    const tag = document.createElement('span');
+    tag.className='esc-tag';
+    tag.textContent='Escalated for review';
+    div.appendChild(tag);
+    div.appendChild(document.createTextNode(text));
+  } else {
+    div.textContent = text;
+  }
   scroll.appendChild(div);
   scroll.scrollTop = scroll.scrollHeight;
 }
@@ -527,6 +552,8 @@ function upsertCard(key, badgeClass, badgeText, detail){
   renderResolutionCards();
 }
 
+const BADGE_ICON = { issued:'✓', eligible:'●', notice:'—', escalated:'⚠' };
+
 function renderResolutionCards(){
   const view = document.getElementById('view-resolution');
   if(session.cardOrder.length===0){ renderResolutionEmpty(); return; }
@@ -534,12 +561,13 @@ function renderResolutionCards(){
   session.cardOrder.forEach(key=>{
     const meta = CARD_META[key];
     const state = session.resolved[key];
+    const icon = BADGE_ICON[state.badgeClass] || '';
     const card = document.createElement('div');
     card.className='res-card';
     card.innerHTML = `
       <div class="res-card-top">
         <span class="res-card-title">${meta.title}</span>
-        <span class="res-badge ${state.badgeClass}">${state.badgeText}</span>
+        <span class="res-badge ${state.badgeClass}">${icon} ${state.badgeText}</span>
       </div>
       <div class="res-card-detail">${state.detail}</div>
     `;
