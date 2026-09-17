@@ -6,29 +6,49 @@
 <title>AeroDesk — Customer Resolution Agent</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --navy-900:#0b1830; --navy-800:#122241; --navy-700:#182c52;
-    --bg:#f4f6fb; --panel:#ffffff; --border:#e4e8f1;
-    --text-900:#101828; --text-600:#475467; --text-400:#98a2b3;
-    --blue:#2f5fed; --blue-100:#e8edfd; --blue-700:#1e40af;
-    --green:#0a9d5c; --green-100:#e5f8ee;
-    --amber:#b7791f; --amber-100:#fdf3e0;
-    --red:#d1293d; --red-100:#fdeaec;
+    --navy-900:#0d2438; --navy-800:#14314a; --navy-700:#1c4058;
+    --brass:#a97e3d; --brass-light:#c9a05f;
+    --bg:#f6f1e6; --panel:#fffdf7; --border:#e6dcc7; --panel-2:#efe8d8;
+    --text-900:#241f16; --text-600:#5c5747; --text-400:#9a9280;
+    --blue:#1f5c66; --blue-100:#e5eeea; --blue-700:#153f47;
+    --green:#0a8a53; --green-100:#e3f5eb;
+    --amber:#a86a12; --amber-100:#faedd4;
+    --red:#b5342f; --red-100:#fbe8e5;
     --radius:16px; --radius-sm:10px;
-    --shadow-sm:0 1px 2px rgba(16,24,40,.06);
-    --shadow-md:0 4px 16px rgba(16,24,40,.08);
-    --shadow-lg:0 12px 32px rgba(16,24,40,.12);
+    --shadow-sm:0 1px 2px rgba(40,30,10,.06);
+    --shadow-md:0 4px 18px rgba(40,30,10,.08);
+    --shadow-lg:0 14px 36px rgba(40,30,10,.14);
+    --font-display:'Fraunces',Georgia,serif;
+    --font-body:'Inter',system-ui,-apple-system,sans-serif;
+    color-scheme:light;
+  }
+  :root[data-theme="dark"]{
+    --navy-900:#060f1c; --navy-800:#0a1728; --navy-700:#102035;
+    --brass:#d7a94f; --brass-light:#e8c884;
+    --bg:#0b1420; --panel:#111d2d; --border:#233450; --panel-2:#0e1928;
+    --text-900:#eef1f6; --text-600:#a7b3c6; --text-400:#66768f;
+    --blue:#5b86ff; --blue-100:#152544; --blue-700:#9db4ff;
+    --green:#3fcf8e; --green-100:#0f2a22;
+    --amber:#e3a94a; --amber-100:#332108;
+    --red:#f0665f; --red-100:#3a1414;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.3);
+    --shadow-md:0 4px 18px rgba(0,0,0,.35);
+    --shadow-lg:0 14px 36px rgba(0,0,0,.5);
+    color-scheme:dark;
   }
   *{box-sizing:border-box;}
   html,body{height:100%;}
   body{
     margin:0; background:var(--bg); color:var(--text-900);
-    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    font-family:var(--font-body);
     -webkit-font-smoothing:antialiased;
+    transition:background .25s ease,color .25s ease;
   }
   .mono{font-family:'JetBrains Mono',monospace;}
+  .serif{font-family:var(--font-display);}
 
   /* ---------- HEADER ---------- */
   header.app-header{
@@ -45,7 +65,7 @@
   }
   .brand-mark svg{width:20px;height:20px;}
   .brand-text{line-height:1.1;}
-  .brand-text .name{font-weight:800; font-size:17px; letter-spacing:.2px;}
+  .brand-text .name{font-family:var(--font-display); font-weight:600; font-size:19px; letter-spacing:.2px;}
   .brand-text .sub{font-size:11.5px; color:#a9b8dd; font-weight:500;}
   .header-right{display:flex; align-items:center; gap:14px;}
   .status-pill{
@@ -61,7 +81,13 @@
     border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; transition:.15s;
   }
   .trace-toggle:hover{background:rgba(255,255,255,.16);}
-  .trace-toggle.active{background:#3a6bff; border-color:#3a6bff; color:#fff;}
+  .trace-toggle.active{background:var(--brass); border-color:var(--brass); color:#1a1305;}
+  .theme-toggle{
+    width:36px; height:36px; display:flex; align-items:center; justify-content:center;
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.16); border-radius:10px;
+    cursor:pointer; font-size:15px; transition:.2s;
+  }
+  .theme-toggle:hover{background:rgba(255,255,255,.16); transform:rotate(-12deg);}
   .switch-btn{
     background:transparent; border:1px solid rgba(255,255,255,.2); color:#c6d1f0;
     padding:8px 14px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; transition:.15s;
@@ -76,7 +102,7 @@
   /* ---------- PICKER SCREEN ---------- */
   #picker-screen{flex-direction:column; align-items:center; justify-content:center; gap:36px; padding:40px; overflow-y:auto;}
   .picker-intro{text-align:center; max-width:640px;}
-  .picker-intro h1{font-size:28px; font-weight:800; margin:0 0 10px; letter-spacing:-.3px;}
+  .picker-intro h1{font-family:var(--font-display); font-size:36px; font-weight:600; margin:0 0 12px; letter-spacing:-.2px;}
   .picker-intro p{color:var(--text-600); font-size:15px; line-height:1.6; margin:0;}
   .picker-grid{display:grid; grid-template-columns:repeat(3,minmax(240px,300px)); gap:20px;}
   .picker-card{
@@ -97,7 +123,7 @@
     width:44px;height:44px;border-radius:12px; display:flex; align-items:center; justify-content:center;
     font-weight:700; font-size:16px; color:#fff;
   }
-  .picker-card h3{margin:0; font-size:16px; font-weight:700;}
+  .picker-card h3{font-family:var(--font-display); margin:0; font-size:19px; font-weight:600;}
   .picker-card .tier{font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; padding:3px 9px; border-radius:999px; display:inline-block; width:fit-content;}
   .picker-card .desc{font-size:13.5px; color:var(--text-600); line-height:1.5;}
   .picker-card .status-badge{font-size:12px; font-weight:600; padding:4px 10px; border-radius:8px; width:fit-content;}
@@ -118,15 +144,20 @@
   .ctx-panel{background:var(--panel); border-right:1px solid var(--border); padding:22px 18px; overflow-y:auto;}
   .ctx-profile{display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; padding-bottom:20px; border-bottom:1px solid var(--border); margin-bottom:18px;}
   .ctx-avatar{width:64px;height:64px;border-radius:16px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:22px; color:#fff;}
-  .ctx-profile h2{margin:0; font-size:16px; font-weight:700;}
+  .ctx-profile h2{font-family:var(--font-display); margin:0; font-size:19px; font-weight:600;}
   .ctx-section{margin-bottom:18px;}
   .ctx-label{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-400); margin-bottom:8px;}
   .ctx-row{display:flex; justify-content:space-between; font-size:13px; padding:6px 0; border-bottom:1px dashed var(--border);}
   .ctx-row span:first-child{color:var(--text-600);}
   .ctx-row span:last-child{font-weight:600;}
-  .flight-card{background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px; font-size:13px;}
-  .flight-card .route{font-weight:700; font-size:14.5px; margin-bottom:4px;}
-  .flight-card .meta{color:var(--text-600); font-size:12.5px; margin-bottom:10px;}
+  .flight-card{background:var(--panel-2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px 16px 14px; font-size:13px; position:relative; overflow:visible;}
+  .flight-card .meta{color:var(--text-600); font-size:12.5px; margin:12px 0 10px;}
+  .bp-eyebrow{font-family:var(--font-display); font-style:italic; font-size:11px; letter-spacing:.6px; color:var(--brass); margin-bottom:8px; font-weight:600;}
+  .bp-route{display:flex; align-items:center; gap:9px; font-family:var(--font-display); font-weight:600; font-size:16px; color:var(--text-900);}
+  .bp-plane{color:var(--brass); font-size:13px; transform:rotate(90deg); flex-shrink:0;}
+  .bp-tear{position:relative; height:1px; margin:12px -16px 0; background-image:linear-gradient(to right, var(--border) 60%, transparent 0%); background-size:9px 1px; background-repeat:repeat-x;}
+  .bp-tear::before, .bp-tear::after{content:''; position:absolute; top:-6px; width:12px; height:12px; border-radius:50%; background:var(--panel);}
+  .bp-tear::before{left:-6px;} .bp-tear::after{right:-6px;}
   .history-note{font-size:12.5px; color:var(--text-600); line-height:1.5; background:var(--bg); padding:10px 12px; border-radius:var(--radius-sm);}
 
   /* Center: conversation */
@@ -224,6 +255,7 @@
   </div>
   <div class="header-right">
     <div class="status-pill"><span class="status-dot"></span>Agent Online</div>
+    <button class="theme-toggle" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle theme">🌙</button>
     <button class="trace-toggle" id="traceToggleBtn" onclick="toggleTraceTab()">Decision Trace</button>
     <button class="switch-btn" id="switchBtn" style="display:none" onclick="showPicker()">Switch Customer</button>
   </div>
@@ -459,7 +491,13 @@ function renderContext(){
     <div class="ctx-section">
       <div class="ctx-label">Flight</div>
       <div class="flight-card ${f.status==='cancelled'?'cancelled':'delayed'}">
-        <div class="route">${f.code} · ${f.route}</div>
+        <div class="bp-eyebrow">Boarding Pass · ${f.code}</div>
+        <div class="bp-route">
+          <span class="bp-city">${f.route.split('→')[0].trim()}</span>
+          <span class="bp-plane">✈</span>
+          <span class="bp-city">${f.route.split('→')[1].trim()}</span>
+        </div>
+        <div class="bp-tear"></div>
         <div class="meta">${f.date} · Scheduled ${f.time}</div>
         <span class="status-badge ${f.status==='cancelled'?'cancelled':'delayed'}">${statusLabel}</span>
       </div>
@@ -863,6 +901,25 @@ function toggleTraceTab(){
   btn.classList.toggle('active');
   switchSideTab(document.getElementById('view-trace').classList.contains('active') ? 'resolution' : 'trace');
 }
+
+/* =========================================================================
+   THEME
+   ========================================================================= */
+function toggleTheme(){
+  const root = document.documentElement;
+  const isDark = root.getAttribute('data-theme') === 'dark';
+  root.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('themeToggleBtn').textContent = isDark ? '🌙' : '☀️';
+  try{ localStorage.setItem('aerodesk-theme', isDark ? 'light' : 'dark'); }catch(e){}
+}
+(function initTheme(){
+  let saved = null;
+  try{ saved = localStorage.getItem('aerodesk-theme'); }catch(e){}
+  if(saved === 'dark'){
+    document.documentElement.setAttribute('data-theme','dark');
+    const b=document.getElementById('themeToggleBtn'); if(b) b.textContent='☀️';
+  }
+})();
 
 /* =========================================================================
    INIT
