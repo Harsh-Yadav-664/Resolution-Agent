@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AeroDesk — Customer Resolution Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-900:#0b1830; --navy-800:#122241; --navy-700:#182c52;
+    --bg:#f4f6fb; --panel:#ffffff; --border:#e4e8f1;
+    --text-900:#101828; --text-600:#475467; --text-400:#98a2b3;
+    --blue:#2f5fed; --blue-100:#e8edfd; --blue-700:#1e40af;
+    --green:#0a9d5c; --green-100:#e5f8ee;
+    --amber:#b7791f; --amber-100:#fdf3e0;
+    --red:#d1293d; --red-100:#fdeaec;
+    --radius:16px; --radius-sm:10px;
+    --shadow-sm:0 1px 2px rgba(16,24,40,.06);
+    --shadow-md:0 4px 16px rgba(16,24,40,.08);
+    --shadow-lg:0 12px 32px rgba(16,24,40,.12);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--bg); color:var(--text-900);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'JetBrains Mono',monospace;}
+
+  /* ---------- HEADER ---------- */
+  header.app-header{
+    height:64px; background:linear-gradient(135deg,var(--navy-900),var(--navy-700));
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 24px; color:#fff; box-shadow:var(--shadow-md); position:relative; z-index:10;
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand-mark{
+    width:36px; height:36px; border-radius:10px;
+    background:linear-gradient(135deg,#3a6bff,#7ea0ff);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 2px 8px rgba(58,107,255,.5);
+  }
+  .brand-mark svg{width:20px;height:20px;}
+  .brand-text{line-height:1.1;}
+  .brand-text .name{font-weight:800; font-size:17px; letter-spacing:.2px;}
+  .brand-text .sub{font-size:11.5px; color:#a9b8dd; font-weight:500;}
+  .header-right{display:flex; align-items:center; gap:14px;}
+  .status-pill{
+    display:flex; align-items:center; gap:7px; background:rgba(10,157,92,.18);
+    border:1px solid rgba(10,157,92,.4); padding:6px 12px; border-radius:999px;
+    font-size:12.5px; font-weight:600; color:#5fe3a4;
+  }
+  .status-dot{width:7px;height:7px;border-radius:50%;background:#22d97a; box-shadow:0 0 0 3px rgba(34,217,122,.25); animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+  .trace-toggle{
+    display:flex; align-items:center; gap:8px; background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.16); color:#dbe4ff; padding:8px 14px;
+    border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; transition:.15s;
+  }
+  .trace-toggle:hover{background:rgba(255,255,255,.16);}
+  .trace-toggle.active{background:#3a6bff; border-color:#3a6bff; color:#fff;}
+  .switch-btn{
+    background:transparent; border:1px solid rgba(255,255,255,.2); color:#c6d1f0;
+    padding:8px 14px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; transition:.15s;
+  }
+  .switch-btn:hover{background:rgba(255,255,255,.1); color:#fff;}
+
+  /* ---------- LAYOUT ---------- */
+  .app-body{display:flex; height:calc(100vh - 64px); overflow:hidden;}
+  .screen{display:none; height:100%; width:100%;}
+  .screen.active{display:flex;}
+
+  /* ---------- PICKER SCREEN ---------- */
+  #picker-screen{flex-direction:column; align-items:center; justify-content:center; gap:36px; padding:40px; overflow-y:auto;}
+  .picker-intro{text-align:center; max-width:640px;}
+  .picker-intro h1{font-size:28px; font-weight:800; margin:0 0 10px; letter-spacing:-.3px;}
+  .picker-intro p{color:var(--text-600); font-size:15px; line-height:1.6; margin:0;}
+  .picker-grid{display:grid; grid-template-columns:repeat(3,minmax(240px,300px)); gap:20px;}
+  .picker-card{
+    background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
+    padding:24px; cursor:pointer; transition:.2s; box-shadow:var(--shadow-sm); text-align:left;
+    display:flex; flex-direction:column; gap:14px;
+  }
+  .picker-card:hover{transform:translateY(-4px); box-shadow:var(--shadow-lg); border-color:#c7d4f7;}
+  .picker-avatar{
+    width:44px;height:44px;border-radius:12px; display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:16px; color:#fff;
+  }
+  .picker-card h3{margin:0; font-size:16px; font-weight:700;}
+  .picker-card .tier{font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; padding:3px 9px; border-radius:999px; display:inline-block; width:fit-content;}
+  .picker-card .desc{font-size:13.5px; color:var(--text-600); line-height:1.5;}
+  .picker-card .status-badge{font-size:12px; font-weight:600; padding:4px 10px; border-radius:8px; width:fit-content;}
+  .tier-gold{background:#fdf3d9; color:#92650a;}
+  .tier-silver{background:#eef1f5; color:#475467;}
+  .tier-platinum{background:#eee8fd; color:#5b21b6;}
+  .avatar-gold{background:linear-gradient(135deg,#e8b13a,#c9860f);}
+  .avatar-silver{background:linear-gradient(135deg,#8b98ac,#5f6b7d);}
+  .avatar-platinum{background:linear-gradient(135deg,#8b6cf0,#5b21b6);}
+  .status-badge.cancelled{background:var(--red-100); color:var(--red);}
+  .status-badge.delayed{background:var(--amber-100); color:var(--amber);}
+
+  /* ---------- WORKSPACE SCREEN ---------- */
+  #workspace-screen{display:none;}
+  #workspace-screen.active{display:grid; grid-template-columns:270px 1fr 340px; width:100%;}
+
+  /* Left: customer context */
+  .ctx-panel{background:var(--panel); border-right:1px solid var(--border); padding:22px 18px; overflow-y:auto;}
+  .ctx-profile{display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; padding-bottom:20px; border-bottom:1px solid var(--border); margin-bottom:18px;}
+  .ctx-avatar{width:64px;height:64px;border-radius:16px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:22px; color:#fff;}
+  .ctx-profile h2{margin:0; font-size:16px; font-weight:700;}
+  .ctx-section{margin-bottom:18px;}
+  .ctx-label{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-400); margin-bottom:8px;}
+  .ctx-row{display:flex; justify-content:space-between; font-size:13px; padding:6px 0; border-bottom:1px dashed var(--border);}
+  .ctx-row span:first-child{color:var(--text-600);}
+  .ctx-row span:last-child{font-weight:600;}
+  .flight-card{background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px; font-size:13px;}
+  .flight-card .route{font-weight:700; font-size:14.5px; margin-bottom:4px;}
+  .flight-card .meta{color:var(--text-600); font-size:12.5px; margin-bottom:10px;}
+  .history-note{font-size:12.5px; color:var(--text-600); line-height:1.5; background:var(--bg); padding:10px 12px; border-radius:var(--radius-sm);}
+
+  /* Center: conversation */
+  .chat-panel{display:flex; flex-direction:column; background:var(--bg); min-width:0;}
+  .chat-scroll{flex:1; overflow-y:auto; padding:24px 28px; display:flex; flex-direction:column; gap:16px;}
+  .msg{max-width:72%; padding:13px 16px; border-radius:16px; font-size:14.5px; line-height:1.55; opacity:0; transform:translateY(8px); animation:msgIn .35s ease forwards;}
+  @keyframes msgIn{to{opacity:1; transform:translateY(0);}}
+  .msg.agent{align-self:flex-start; background:#fff; border:1px solid var(--border); border-bottom-left-radius:4px; box-shadow:var(--shadow-sm);}
+  .msg.user{align-self:flex-end; background:var(--blue); color:#fff; border-bottom-right-radius:4px;}
+  .msg.escalation{border-left:3px solid var(--amber); background:var(--amber-100);}
+  .typing{align-self:flex-start; background:#fff; border:1px solid var(--border); border-radius:16px; border-bottom-left-radius:4px; padding:14px 18px; display:flex; gap:5px;}
+  .typing span{width:6px;height:6px;border-radius:50%;background:var(--text-400); animation:blink 1.2s infinite;}
+  .typing span:nth-child(2){animation-delay:.2s;} .typing span:nth-child(3){animation-delay:.4s;}
+  @keyframes blink{0%,80%,100%{opacity:.25;}40%{opacity:1;}}
+
+  .chip-row{display:flex; flex-wrap:wrap; gap:8px; padding:0 28px 14px;}
+  .chip{background:#fff; border:1px solid var(--border); color:var(--text-600); font-size:12.5px; padding:8px 13px; border-radius:999px; cursor:pointer; transition:.15s; font-weight:500;}
+  .chip:hover{border-color:var(--blue); color:var(--blue); background:var(--blue-100);}
+
+  .input-bar{display:flex; gap:10px; padding:16px 28px 22px; background:var(--bg);}
+  .input-bar input{
+    flex:1; border:1px solid var(--border); background:#fff; border-radius:12px; padding:13px 16px;
+    font-size:14.5px; font-family:inherit; outline:none; transition:.15s;
+  }
+  .input-bar input:focus{border-color:var(--blue); box-shadow:0 0 0 3px var(--blue-100);}
+  .send-btn{
+    background:var(--blue); color:#fff; border:none; border-radius:12px; padding:0 20px;
+    font-weight:600; font-size:14px; cursor:pointer; transition:.15s; display:flex; align-items:center; gap:6px;
+  }
+  .send-btn:hover{background:var(--blue-700);}
+  .send-btn:disabled{opacity:.5; cursor:not-allowed;}
+
+  /* Right panel: tabs */
+  .side-panel{background:var(--panel); border-left:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden;}
+  .side-tabs{display:flex; border-bottom:1px solid var(--border);}
+  .side-tab{flex:1; text-align:center; padding:14px 0; font-size:13px; font-weight:700; color:var(--text-400); cursor:pointer; border-bottom:2px solid transparent; transition:.15s;}
+  .side-tab.active{color:var(--navy-900); border-bottom-color:var(--blue);}
+  .side-content{flex:1; overflow-y:auto; padding:18px;}
+  .side-view{display:none;} .side-view.active{display:block;}
+
+  .res-card{
+    background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm);
+    padding:14px 16px; margin-bottom:12px; opacity:0; transform:translateY(6px); animation:msgIn .3s ease forwards;
+  }
+  .res-card-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;}
+  .res-card-title{font-size:12.5px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--text-600);}
+  .res-badge{font-size:11px; font-weight:700; padding:3px 9px; border-radius:999px;}
+  .res-badge.issued{background:var(--green-100); color:var(--green);}
+  .res-badge.eligible{background:var(--blue-100); color:var(--blue-700);}
+  .res-badge.notice{background:#eef1f5; color:var(--text-600);}
+  .res-badge.escalated{background:var(--amber-100); color:var(--amber);}
+  .res-card-detail{font-size:13px; color:var(--text-600); line-height:1.5;}
+  .empty-state{text-align:center; color:var(--text-400); font-size:13px; padding:40px 10px; line-height:1.6;}
+
+  .trace-card{background:var(--navy-900); color:#dbe4ff; border-radius:var(--radius-sm); padding:14px 16px; margin-bottom:12px; font-size:12.5px; line-height:1.6;}
+  .trace-card .t-row{display:flex; gap:6px; margin-bottom:3px;}
+  .trace-card .t-key{color:#7c93d6; font-weight:700; min-width:64px; flex-shrink:0;}
+  .trace-card .t-val{color:#eef2ff;}
+  .trace-card .t-decision{margin-top:6px; padding-top:6px; border-top:1px solid rgba(255,255,255,.12); font-weight:700;}
+  .trace-card .t-decision.ok{color:#5fe3a4;} .trace-card .t-decision.escalate{color:#f5b95f;}
+
+  .audit-item{display:flex; gap:9px; align-items:flex-start; font-size:12.5px; padding:7px 0; color:var(--text-600); border-bottom:1px solid var(--border);}
+  .audit-item .mark{flex-shrink:0; font-weight:700;}
+  .audit-item.ok .mark{color:var(--green);}
+  .audit-item.warn .mark{color:var(--amber);}
+  .section-label{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-400); margin:4px 0 12px;}
+
+  ::-webkit-scrollbar{width:8px;} ::-webkit-scrollbar-thumb{background:#d5dbe8; border-radius:8px;}
+
+  @media (max-width:980px){
+    #workspace-screen.active{grid-template-columns:1fr;}
+    .ctx-panel,.side-panel{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 2L4 14h6l-1 8 9-13h-6l0-7z" fill="#fff"/></svg>
+    </div>
+    <div class="brand-text">
+      <div class="name">AeroDesk</div>
+      <div class="sub">Customer Resolution Agent</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="status-pill"><span class="status-dot"></span>Agent Online</div>
+    <button class="trace-toggle" id="traceToggleBtn" onclick="toggleTraceTab()">Decision Trace</button>
+    <button class="switch-btn" id="switchBtn" style="display:none" onclick="showPicker()">Switch Customer</button>
+  </div>
+</header>
+
+<div class="app-body">
+
+  <!-- PICKER -->
+  <div id="picker-screen" class="screen active">
+    <div class="picker-intro">
+      <h1>Select a customer to begin</h1>
+      <p>Each case below reflects a real booking on file. Open one to see how the agent understands the disruption, applies policy, and resolves the case in real time.</p>
+    </div>
+    <div class="picker-grid" id="pickerGrid"></div>
+  </div>
+
+  <!-- WORKSPACE -->
+  <div id="workspace-screen" class="screen">
+    <div class="ctx-panel" id="ctxPanel"></div>
+
+    <div class="chat-panel">
+      <div class="chat-scroll" id="chatScroll"></div>
+      <div class="chip-row" id="chipRow"></div>
+      <div class="input-bar">
+        <input type="text" id="msgInput" placeholder="Type a message…" onkeydown="if(event.key==='Enter')sendMessage()">
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+
+    <div class="side-panel">
+      <div class="side-tabs">
+        <div class="side-tab active" id="tabResolutionBtn" onclick="switchSideTab('resolution')">Resolution</div>
+        <div class="side-tab" id="tabTraceBtn" onclick="switchSideTab('trace')">Decision Trace</div>
+      </div>
+      <div class="side-content">
+        <div class="side-view active" id="view-resolution"></div>
+        <div class="side-view" id="view-trace"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* =========================================================================
+   DATA LAYER — structured verbatim from the AIONOS Data Pack.
+   No policy, customer, or booking fact below is invented.
+   ========================================================================= */
+const DATA = {
+  customers: {
+    priya: {
+      id:'priya', name:'Priya Nair', tier:'Gold', tierClass:'gold', pnr:'SK4821X',
+      history:'6 flights in the last 12 months · 1 prior case (delayed baggage — resolved with a voucher)',
+      flights:[
+        {code:'SK-204', route:'Delhi → Goa', date:'Wed, 23 Sep 2026', time:'18:40', status:'cancelled', reason:'operational reasons'},
+        {code:'Return', route:'Goa → Delhi', date:'Fri, 25 Sep 2026', time:'16:20', status:'unaffected'}
+      ],
+      primaryFlight:0,
+      chips:[
+        "My flight got cancelled — what are my options?",
+        "I want a full refund, and I'd also like a free upgrade to business class on my return flight for the trouble — this is unacceptable!",
+        "I'm going to file a formal complaint and speak to my lawyer about this."
+      ]
+    },
+    arvind: {
+      id:'arvind', name:'Arvind Kulkarni', tier:'Silver', tierClass:'silver', pnr:'TR1190B',
+      history:'3 flights in the last 12 months · no prior cases',
+      flights:[
+        {code:'SK-118', route:'Mumbai → Bengaluru', date:'Wed, 23 Sep 2026', time:'07:10', status:'delayed', delayHours:4, newTime:'11:10'}
+      ],
+      primaryFlight:0,
+      chips:[
+        "Why is my flight delayed?",
+        "This delay has made me miss my connecting meeting — I need hotel accommodation since it's been such a long delay.",
+        "Can you refund this to a different card instead?"
+      ]
+    },
+    meher: {
+      id:'meher', name:'Meher Kaur', tier:'Platinum', tierClass:'platinum', pnr:'WL7742',
+      history:'10 flights in the last 12 months · 1 prior case (overbooking — resolved with a tier-status upgrade)',
+      flights:[
+        {code:'SK-305', route:'Delhi → Hyderabad', date:'Wed, 23 Sep 2026', time:'14:00', status:'delayed', delayHours:6, newTime:'20:00'}
+      ],
+      primaryFlight:0,
+      alternativeFlight:{ description:'a different, higher-fare flight departing sooner', fareDifference:2000 },
+      chips:[
+        "What am I entitled to for this delay?",
+        "I'd like a full night's hotel stay rather than just the delayed hours.",
+        "Please move me to a different, higher-fare flight instead of waiting."
+      ]
+    }
+  },
+  FARE_DIFF_AGENT_LIMIT: 1500,
+  VOUCHER_AMOUNT: 500
+};
+
+/* =========================================================================
+   POLICY ENGINE — deterministic. The only source of business decisions.
+   The intent/NLU layer below may never override what this returns.
+   ========================================================================= */
+const Policy = {
+  evaluateDelay(hours){
+    return {
+      voucher:true,
+      voucherAmount:DATA.VOUCHER_AMOUNT,
+      lounge: hours>3,
+      hotel: hours>5,
+      hotelScopeFullNight:false,
+      band: hours>5 ? 'over 5h' : hours>3 ? 'over 3h' : 'under 3h'
+    };
+  },
+  evaluateCancellation(){
+    return { rebookFree:true, rebookWindowHours:24, refundFull:true, refundDays:7, refundMethod:'original' };
+  },
+  evaluateFareDifference(amount){
+    return { amount, waivableByAgent: amount<=DATA.FARE_DIFF_AGENT_LIMIT, requiresSupervisor: amount>DATA.FARE_DIFF_AGENT_LIMIT };
+  }
+};
+
+/* =========================================================================
+   INTENT LAYER — pattern-based stand-in for an LLM function-calling step.
+   classify(text) -> string[] intents. Swappable: keep the same return
+   contract and this can be replaced by a real model call without touching
+   the policy engine or the resolver below.
+   ========================================================================= */
+const IntentEngine = {
+  classify(text){
+    const t = text.toLowerCase();
+    const intents = [];
+    if(/legal|lawyer|sue|consumer court|formal complaint/.test(t)) intents.push('legal_threat');
+    if(/different (payment|card|account|method)|another (card|account)|paypal/.test(t)) intents.push('different_payment_method');
+    if(/full night|entire night|whole night/.test(t) && /hotel|stay|accommodation/.test(t)) intents.push('full_night_hotel_request');
+    else if(/hotel|accommodation|\bstay\b/.test(t)) intents.push('hotel_request');
+    if(/refund|money back|cash back|reimburse/.test(t)) intents.push('refund_request');
+    if(/upgrade|business class/.test(t)) intents.push('upgrade_request');
+    if(/different flight|another flight|switch (me |to )?(a |the )?flight|move me|reroute|higher.fare|earlier flight|instead of waiting/.test(t)) intents.push('reroute_request');
+    if(/rebook|next available|next flight/.test(t)) intents.push('rebook_request');
+    if(/voucher|meal/.test(t)) intents.push('voucher_inquiry');
+    if(/lounge/.test(t)) intents.push('lounge_inquiry');
+    if(/what happened|status|what's going on|why is my flight|update on my flight|entitled/.test(t)) intents.push('status_inquiry');
+    if(intents.length===0) intents.push('unclear');
+    return [...new Set(intents)];
+  },
+  isFrustrated(text){
+    return /furious|angry|frustrat|unacceptable|ridiculous|terrible|worst|upset|annoyed|disgust/i.test(text);
+  }
+};
+
+/* =========================================================================
+   SESSION STATE
+   ========================================================================= */
+let session = null;
+
+function newSession(customerId){
+  const customer = DATA.customers[customerId];
+  const flight = customer.flights[customer.primaryFlight];
+  session = {
+    customer, flight,
+    resolved:{}, // action key -> state
+    cardOrder:[],
+    turn:0
+  };
+}
+
+/* =========================================================================
+   RENDER: PICKER
+   ========================================================================= */
+function renderPicker(){
+  const grid = document.getElementById('pickerGrid');
+  grid.innerHTML = '';
+  Object.values(DATA.customers).forEach(c=>{
+    const f = c.flights[c.primaryFlight];
+    const statusLabel = f.status==='cancelled' ? 'Cancelled' : `Delayed ${f.delayHours}h`;
+    const statusClass = f.status==='cancelled' ? 'cancelled' : 'delayed';
+    const initials = c.name.split(' ').map(w=>w[0]).join('');
+    const card = document.createElement('div');
+    card.className='picker-card';
+    card.onclick=()=>openScenario(c.id);
+    card.innerHTML = `
+      <div class="picker-avatar avatar-${c.tierClass}">${initials}</div>
+      <div>
+        <h3>${c.name}</h3>
+        <span class="tier tier-${c.tierClass}">${c.tier}</span>
+      </div>
+      <div class="desc">${f.code} · ${f.route}<br>${f.date}, ${f.time}</div>
+      <span class="status-badge ${statusClass}">${statusLabel}</span>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function showPicker(){
+  document.getElementById('picker-screen').classList.add('active');
+  document.getElementById('workspace-screen').classList.remove('active');
+  document.getElementById('switchBtn').style.display='none';
+}
+
+/* =========================================================================
+   RENDER: WORKSPACE
+   ========================================================================= */
+function openScenario(customerId){
+  newSession(customerId);
+  document.getElementById('picker-screen').classList.remove('active');
+  document.getElementById('workspace-screen').classList.add('active');
+  document.getElementById('switchBtn').style.display='inline-block';
+
+  renderContext();
+  document.getElementById('chatScroll').innerHTML='';
+  document.getElementById('view-resolution').innerHTML='';
+  document.getElementById('view-trace').innerHTML='<div class="section-label">Reasoning Trace</div><div id="traceList"></div><div class="section-label" style="margin-top:18px;">Audit Trail</div><div id="auditList"></div>';
+  renderResolutionEmpty();
+  renderChips();
+  switchSideTab('resolution');
+
+  runProactiveResolution();
+}
+
+function renderContext(){
+  const c = session.customer, f = session.flight;
+  const initials = c.name.split(' ').map(w=>w[0]).join('');
+  const statusLabel = f.status==='cancelled' ? `Cancelled · ${f.reason}` : `Delayed ${f.delayHours}h → new departure ${f.newTime}`;
+  document.getElementById('ctxPanel').innerHTML = `
+    <div class="ctx-profile">
+      <div class="ctx-avatar avatar-${c.tierClass}">${initials}</div>
+      <h2>${c.name}</h2>
+      <span class="tier tier-${c.tierClass}">${c.tier} tier</span>
+    </div>
+    <div class="ctx-section">
+      <div class="ctx-label">Booking</div>
+      <div class="ctx-row"><span>PNR</span><span>${c.pnr}</span></div>
+    </div>
+    <div class="ctx-section">
+      <div class="ctx-label">Flight</div>
+      <div class="flight-card">
+        <div class="route">${f.code} · ${f.route}</div>
+        <div class="meta">${f.date} · Scheduled ${f.time}</div>
+        <span class="status-badge ${f.status==='cancelled'?'cancelled':'delayed'}">${statusLabel}</span>
+      </div>
+    </div>
+    <div class="ctx-section">
+      <div class="ctx-label">Travel History</div>
+      <div class="history-note">${c.history}</div>
+    </div>
+  `;
+}
+
+function renderChips(){
+  const row = document.getElementById('chipRow');
+  row.innerHTML='';
+  (session.customer.chips||[]).forEach(text=>{
+    const chip = document.createElement('div');
+    chip.className='chip';
+    chip.textContent = text.length>70 ? text.slice(0,68)+'…' : text;
+    chip.title = text;
+    chip.onclick=()=>{ document.getElementById('msgInput').value=text; sendMessage(); };
+    row.appendChild(chip);
+  });
+}
+
+function renderResolutionEmpty(){
+  document.getElementById('view-resolution').innerHTML = '<div class="empty-state">Resolution outcomes will appear here as the conversation progresses.</div>';
+}
+
+/* =========================================================================
+   CHAT RENDERING
+   ========================================================================= */
+function appendMessage(role, text, opts={}){
+  const scroll = document.getElementById('chatScroll');
+  const div = document.createElement('div');
+  div.className = 'msg ' + role + (opts.escalation?' escalation':'');
+  div.textContent = text;
+  scroll.appendChild(div);
+  scroll.scrollTop = scroll.scrollHeight;
+}
+
+function showTyping(){
+  const scroll = document.getElementById('chatScroll');
+  const div = document.createElement('div');
+  div.className='typing'; div.id='typingIndicator';
+  div.innerHTML='<span></span><span></span><span></span>';
+  scroll.appendChild(div);
+  scroll.scrollTop = scroll.scrollHeight;
+}
+function hideTyping(){
+  const t = document.getElementById('typingIndicator');
+  if(t) t.remove();
+}
+
+function agentSay(text, opts={}, delay=650){
+  showTyping();
+  return new Promise(resolve=>{
+    setTimeout(()=>{
+      hideTyping();
+      appendMessage('agent', text, opts);
+      resolve();
+    }, delay);
+  });
+}
+
+/* =========================================================================
+   RESOLUTION CARDS
+   ========================================================================= */
+const CARD_META = {
+  refund:      { title:'Refund' },
+  rebooking:   { title:'Rebooking' },
+  voucher:     { title:'Meal Voucher' },
+  lounge:      { title:'Lounge Access' },
+  hotel:       { title:'Hotel Accommodation' },
+  fare_waiver: { title:'Fare Difference Waiver' },
+  upgrade:     { title:'Business Upgrade' },
+  payment_method:{ title:'Refund Method' }
+};
+
+function upsertCard(key, badgeClass, badgeText, detail){
+  if(!session.cardOrder.includes(key)) session.cardOrder.push(key);
+  session.resolved[key] = {badgeClass, badgeText, detail};
+  renderResolutionCards();
+}
+
+function renderResolutionCards(){
+  const view = document.getElementById('view-resolution');
+  if(session.cardOrder.length===0){ renderResolutionEmpty(); return; }
+  view.innerHTML='';
+  session.cardOrder.forEach(key=>{
+    const meta = CARD_META[key];
+    const state = session.resolved[key];
+    const card = document.createElement('div');
+    card.className='res-card';
+    card.innerHTML = `
+      <div class="res-card-top">
+        <span class="res-card-title">${meta.title}</span>
+        <span class="res-badge ${state.badgeClass}">${state.badgeText}</span>
+      </div>
+      <div class="res-card-detail">${state.detail}</div>
+    `;
+    view.appendChild(card);
+  });
+}
+
+/* =========================================================================
+   DECISION TRACE + AUDIT TRAIL
+   ========================================================================= */
+function addTrace({request, booking, rule, decision, action, escalate}){
+  const list = document.getElementById('traceList');
+  const div = document.createElement('div');
+  div.className='trace-card';
+  div.innerHTML = `
+    <div class="t-row"><span class="t-key">REQUEST</span><span class="t-val">${request}</span></div>
+    <div class="t-row"><span class="t-key">BOOKING</span><span class="t-val">${booking}</span></div>
+    <div class="t-row"><span class="t-key">RULE</span><span class="t-val">${rule}</span></div>
+    <div class="t-decision ${escalate?'escalate':'ok'}">${decision}</div>
+    <div class="t-row" style="margin-top:4px;"><span class="t-key">ACTION</span><span class="t-val">${action}</span></div>
+  `;
+  list.appendChild(div);
+}
+
+function addAudit(text, warn=false){
+  const list = document.getElementById('auditList');
+  const div = document.createElement('div');
+  div.className='audit-item '+(warn?'warn':'ok');
+  div.innerHTML = `<span class="mark">${warn?'⚠':'✓'}</span><span>${text}</span>`;
+  list.appendChild(div);
+}
+
+/* =========================================================================
+   PROACTIVE RESOLUTION — runs the moment a case is opened.
+   The agent already has the booking; it should not ask the customer to
+   restate their situation.
+   ========================================================================= */
+async function runProactiveResolution(){
+  const c = session.customer, f = session.flight;
+  addAudit('Customer identified — '+c.name+' ('+c.tier+' tier)');
+  addAudit('Booking retrieved — '+f.code+' · '+f.route);
+
+  if(f.status==='cancelled'){
+    const ev = Policy.evaluateCancellation();
+    addAudit('Cancellation policy evaluated');
+    addTrace({
+      request:'Session opened — flight shows cancelled',
+      booking:f.code+' cancelled ('+f.reason+')',
+      rule:'Cancellation Rebooking Rule',
+      decision:'DECISION: Customer entitled to free rebooking OR full refund — customer\'s choice',
+      action:'Presenting both options; awaiting customer preference'
+    });
+    upsertCard('refund','eligible','Awaiting choice','Full refund to original payment method · within 7 business days, if selected.');
+    upsertCard('rebooking','eligible','Awaiting choice','Free rebooking on the next available flight within 24 hours, if selected.');
+    await agentSay(`Hi ${c.name.split(' ')[0]}, I'm sorry to say flight ${f.code} (${f.route}) has been cancelled due to ${f.reason}. You're entitled to a free rebooking on the next available flight within 24 hours, or a full refund — whichever works better for you. Which would you prefer?`);
+  } else {
+    const ev = Policy.evaluateDelay(f.delayHours);
+    addAudit('Delay compensation policy evaluated ('+f.delayHours+'h delay)');
+    let granted = ['a meal voucher'];
+    if(ev.lounge) granted.push('lounge access');
+    if(ev.hotel) granted.push('hotel accommodation for the delayed hours');
+    upsertCard('voucher','issued','Issued','₹'+ev.voucherAmount+' meal voucher applied to the booking.');
+    if(ev.lounge) upsertCard('lounge','issued','Issued','Lounge access applied for the wait.');
+    if(ev.hotel) upsertCard('hotel','issued','Issued · delayed hours only','Covers the delayed period, not a full night\'s stay.');
+    else upsertCard('hotel','notice','Not eligible','Hotel accommodation applies only once a delay passes 5 hours.');
+    addAudit('Meal voucher issued'+(ev.lounge?' · Lounge access issued':'')+(ev.hotel?' · Hotel arranged (delayed hours)':''));
+    addTrace({
+      request:'Session opened — flight shows delayed',
+      booking:f.delayHours+'h delay, new departure '+f.newTime,
+      rule:'Delay Compensation Rule ('+ev.band+')',
+      decision:'DECISION: Eligible for '+granted.join(', '),
+      action: granted.map(g=>'Applied — '+g).join('; ')
+    });
+    const joined = granted.length>1 ? granted.slice(0,-1).join(', ')+' and '+granted[granted.length-1] : granted[0];
+    await agentSay(`Hi ${c.name.split(' ')[0]}, I can see flight ${f.code} (${f.route}) is delayed by ${f.delayHours} hours, now departing at ${f.newTime}. You're eligible for ${joined} under our delay policy — I've gone ahead and applied ${granted.length>1?'these':'this'} to your booking. Let me know if there's anything else I can help with.`);
+  }
+}
+
+/* =========================================================================
+   MESSAGE HANDLING — UNDERSTAND -> VERIFY -> APPLY POLICY -> ACT/ESCALATE
+   -> RECORD -> RESPOND
+   ========================================================================= */
+async function sendMessage(){
+  const input = document.getElementById('msgInput');
+  const text = input.value.trim();
+  if(!text) return;
+  input.value='';
+  document.getElementById('sendBtn').disabled = true;
+  appendMessage('user', text);
+
+  const intents = IntentEngine.classify(text);
+  const frustrated = IntentEngine.isFrustrated(text);
+
+  await handleIntents(intents, text, frustrated);
+  document.getElementById('sendBtn').disabled = false;
+  input.focus();
+}
+
+async function handleIntents(intents, rawText, frustrated){
+  const c = session.customer, f = session.flight;
+
+  // Legal threat / formal complaint overrides everything else in the turn.
+  if(intents.includes('legal_threat')){
+    addAudit('Legal action / formal complaint mentioned', true);
+    addTrace({
+      request:'Customer referenced legal action / a formal complaint',
+      booking:f.code+' · '+f.status,
+      rule:'Escalation Policy — legal threats and formal complaints',
+      decision:'DECISION: Escalate immediately — no further resolution attempted in this turn',
+      action:'Escalation created — specialist support team notified',
+      escalate:true
+    });
+    await agentSay("I hear you, and I'm sorry this has been such a frustrating experience. I want to make sure this gets the right attention — I'm escalating this to our specialist support team right now, and they'll reach out to you directly.", {escalation:true});
+    return;
+  }
+
+  let opener = frustrated ? "I completely understand the frustration, and I'm sorry for the disruption this has caused. " : "";
+  let firstReply = true;
+
+  for(const intent of intents){
+    if(intent==='legal_threat') continue;
+    const reply = await resolveIntent(intent, rawText, c, f);
+    if(reply){
+      await agentSay((firstReply?opener:'') + reply.text, {escalation:reply.escalation});
+      firstReply = false;
+    }
+  }
+}
+
+async function resolveIntent(intent, rawText, c, f){
+  switch(intent){
+
+    case 'status_inquiry': {
+      if(f.status==='cancelled'){
+        return {text:`Just to recap — flight ${f.code} (${f.route}) was cancelled due to ${f.reason}. You can choose a free rebooking on the next available flight within 24 hours, or a full refund. Which would you like?`};
+      } else {
+        const ev = Policy.evaluateDelay(f.delayHours);
+        let items = ['a meal voucher'];
+        if(ev.lounge) items.push('lounge access');
+        if(ev.hotel) items.push('hotel accommodation for the delayed hours');
+        return {text:`Flight ${f.code} is delayed ${f.delayHours} hours, now departing ${f.newTime}. You're covered for ${items.join(', ')}, which I've already applied.`};
+      }
+    }
+
+    case 'refund_request': {
+      if(f.status==='cancelled'){
+        const ev = Policy.evaluateCancellation();
+        upsertCard('refund','issued','Initiated','Full refund initiated to the original payment method · processing within 7 business days.');
+        addAudit('Refund eligibility confirmed');
+        addAudit('Refund initiated — original payment method, 7 business days');
+        addTrace({
+          request:'Full refund requested',
+          booking:f.code+' cancelled ('+f.reason+')',
+          rule:'Cancellation Rebooking Rule + Refund Processing Rule',
+          decision:'DECISION: Refund approved',
+          action:'Refund initiated to original payment method — completes within 7 business days'
+        });
+        return {text:"I've gone ahead and initiated your full refund. It will be returned to your original payment method and should reflect within 7 business days."};
+      } else {
+        addTrace({
+          request:'Refund requested for a delay (not a cancellation)',
+          booking:f.delayHours+'h delay',
+          rule:'Refund Processing Rule applies to airline-caused cancellations',
+          decision:'DECISION: Not applicable — flight was delayed, not cancelled',
+          action:'Explained applicable delay compensation instead'
+        });
+        return {text:"Refunds apply when a flight is cancelled — since yours is delayed rather than cancelled, the compensation that applies is the delay policy, which I've already applied to your booking."};
+      }
+    }
+
+    case 'different_payment_method': {
+      upsertCard('payment_method','escalated','Escalated','Refunds can only return to the original payment method; the alternate-method request has been escalated.');
+      addAudit('Alternate payment method request escalated', true);
+      addTrace({
+        request:'Refund requested to a different payment method',
+        booking:f.code,
+        rule:'Refund Processing Rule — original payment method only',
+        decision:'DECISION: Not permitted — escalate',
+        action:'Escalated for review',
+        escalate:true
+      });
+      return {text:"Refunds can only be returned to the original payment method used for the booking, so I'm not able to send it elsewhere. I'll escalate this specific request in case an exception can be reviewed.", escalation:true};
+    }
+
+    case 'upgrade_request': {
+      upsertCard('upgrade','escalated','Not authorized','A complimentary upgrade isn\'t part of the available resolution for this disruption — escalated for review.');
+      addAudit('Business upgrade request escalated', true);
+      addTrace({
+        request:'Complimentary business-class upgrade requested',
+        booking:f.code,
+        rule:'Allowed/Prohibited Actions — compensation beyond stated policy',
+        decision:'DECISION: Not authorized by supplied policy — escalate',
+        action:'Escalated to supervisor for review',
+        escalate:true
+      });
+      return {text:"I understand you'd like a complimentary upgrade to business class. That's not something I'm able to apply as part of the resolution for this disruption, but I can escalate the request so a supervisor can take a further look.", escalation:true};
+    }
+
+    case 'hotel_request':
+    case 'full_night_hotel_request': {
+      const ev = Policy.evaluateDelay(f.delayHours);
+      const wantsFullNight = intent==='full_night_hotel_request';
+      if(!ev.hotel){
+        upsertCard('hotel','notice','Not eligible','Hotel accommodation applies only once a delay passes 5 hours.');
+        upsertCard('voucher','issued','Issued','₹'+ev.voucherAmount+' meal voucher applied.');
+        if(ev.lounge) upsertCard('lounge','issued','Issued','Lounge access applied for the wait.');
+        addTrace({
+          request:'Hotel accommodation requested',
+          booking:f.delayHours+'h delay',
+          rule:'Delay Compensation Rule — hotel applies beyond 5h',
+          decision:'DECISION: Not eligible',
+          action:'Confirmed meal voucher'+(ev.lounge?' and lounge access':'')+' instead'
+        });
+        return {text:`I'm sorry, but hotel accommodation isn't available for a delay of this length. I can still make sure you have the meal voucher${ev.lounge?' and lounge access':''} that do apply here.`};
+      } else {
+        upsertCard('hotel','issued','Issued · delayed hours only','Covers the delayed period, not a full night\'s stay.');
+        addAudit('Hotel accommodation confirmed (delayed hours only)');
+        addTrace({
+          request: wantsFullNight ? 'Full-night hotel stay requested' : 'Hotel accommodation requested',
+          booking:f.delayHours+'h delay',
+          rule:'Delay Compensation Rule — hotel covers delayed-hours portion only',
+          decision:'DECISION: Eligible for delayed-hours coverage'+(wantsFullNight?' — full night not covered':''),
+          action:'Hotel accommodation confirmed for the delayed-hours portion'
+        });
+        return {text: wantsFullNight
+          ? "I can cover accommodation for the hours you're delayed, though our policy covers that delayed period rather than a full night's stay. I've applied that coverage to your booking."
+          : "I've arranged hotel accommodation to cover your delayed hours — that's already applied to your booking."
+        };
+      }
+    }
+
+    case 'reroute_request': {
+      if(c.alternativeFlight){
+        const fd = Policy.evaluateFareDifference(c.alternativeFlight.fareDifference);
+        if(fd.waivableByAgent){
+          upsertCard('fare_waiver','issued','Waived','Fare difference of ₹'+fd.amount+' waived — rebooking confirmed.');
+          addTrace({request:'Reroute to a higher-fare flight requested', booking:'Fare difference ₹'+fd.amount, rule:'Fare Difference Rule (≤ ₹1,500 agent limit)', decision:'DECISION: Approved', action:'Fare difference waived; rebooking confirmed'});
+          return {text:`I can move you to that flight — the ₹${fd.amount} fare difference is within what I can approve directly, so I've gone ahead and confirmed the switch.`};
+        } else {
+          upsertCard('fare_waiver','escalated','Supervisor review','₹'+fd.amount+' fare difference exceeds the ₹'+DATA.FARE_DIFF_AGENT_LIMIT+' agent limit — escalated.');
+          addAudit('Fare difference of ₹'+fd.amount+' escalated for supervisor approval', true);
+          addTrace({
+            request:'Reroute to a higher-fare flight requested',
+            booking:'Fare difference ₹'+fd.amount+' · customer tier: '+c.tier,
+            rule:'Fare Difference Rule — agent limit ₹'+DATA.FARE_DIFF_AGENT_LIMIT,
+            decision:'DECISION: Exceeds agent authority — escalate to supervisor ('+c.tier+' tier does not extend this limit)',
+            action:'Escalated for supervisor approval',
+            escalate:true
+          });
+          return {text:`I can see that flight, but it carries a ₹${fd.amount} fare difference, which is above what I'm able to waive directly. I've escalated this to a supervisor so you can get a quick decision.`, escalation:true};
+        }
+      }
+      return {text:"I don't have a higher-fare alternative on file for this route right now — I'd recommend the current rebooking option, or let me know if you'd like me to look into other flights."};
+    }
+
+    case 'rebook_request': {
+      if(f.status==='cancelled'){
+        upsertCard('rebooking','issued','Confirmed','Rebooked on the next available flight within 24 hours, at no extra charge.');
+        addAudit('Rebooking confirmed on next available flight');
+        addTrace({request:'Rebooking requested', booking:f.code+' cancelled', rule:'Cancellation Rebooking Rule', decision:'DECISION: Approved', action:'Rebooked on next available flight within 24 hours, no charge'});
+        return {text:"You're all set — I've rebooked you on the next available flight within 24 hours at no extra cost."};
+      }
+      return {text:"Your current flight is on schedule for departure at "+f.newTime+"; there's no need to rebook unless you'd like to explore other options."};
+    }
+
+    case 'voucher_inquiry': {
+      const ev = Policy.evaluateDelay(f.delayHours || 0);
+      return {text: f.status==='cancelled' ? "Meal vouchers apply to qualifying delays — since your flight was cancelled, you're covered instead by the rebooking or refund options." : `Yes — a ₹${ev.voucherAmount} meal voucher has been applied to your booking.`};
+    }
+
+    case 'lounge_inquiry': {
+      const ev = Policy.evaluateDelay(f.delayHours || 0);
+      return {text: ev.lounge ? "Yes, lounge access has been applied to your booking for the wait." : "Lounge access applies once a delay passes 3 hours — this one doesn't currently qualify."};
+    }
+
+    case 'unclear':
+    default:
+      return {text:"Happy to help — could you tell me a little more about what you'd like to do? For example, checking your flight status, requesting compensation, or rebooking."};
+  }
+}
+
+/* =========================================================================
+   SIDE PANEL TABS
+   ========================================================================= */
+function switchSideTab(tab){
+  document.getElementById('tabResolutionBtn').classList.toggle('active', tab==='resolution');
+  document.getElementById('tabTraceBtn').classList.toggle('active', tab==='trace');
+  document.getElementById('view-resolution').classList.toggle('active', tab==='resolution');
+  document.getElementById('view-trace').classList.toggle('active', tab==='trace');
+}
+function toggleTraceTab(){
+  const btn = document.getElementById('traceToggleBtn');
+  btn.classList.toggle('active');
+  switchSideTab(document.getElementById('view-trace').classList.contains('active') ? 'resolution' : 'trace');
+}
+
+/* =========================================================================
+   INIT
+   ========================================================================= */
+renderPicker();
+</script>
+</body>
+</html>
